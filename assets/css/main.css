@@ -3950,3 +3950,292 @@ input, select, textarea {
 			opacity: 1;
 			visibility: visible;
 		}
+
+/* Neo Sunrise homepage skin */
+
+body.neo-sunrise {
+	background:
+		radial-gradient(circle at 10% -20%, #f9d16e 0%, rgba(249, 209, 110, 0) 35%),
+		radial-gradient(circle at 90% 10%, #69d2c3 0%, rgba(105, 210, 195, 0) 42%),
+		linear-gradient(140deg, #131827 0%, #1c2438 45%, #111827 100%);
+	font-family: "Space Grotesk", "Source Sans Pro", sans-serif;
+	position: relative;
+	overflow-x: hidden;
+}
+
+body.neo-sunrise:before,
+body.neo-sunrise:after {
+	content: "";
+	position: fixed;
+	pointer-events: none;
+	z-index: 0;
+	filter: blur(90px);
+	opacity: 0.28;
+}
+
+body.neo-sunrise:before {
+	width: 30rem;
+	height: 30rem;
+	background: #ff8f5a;
+	top: -10rem;
+	left: -8rem;
+}
+
+body.neo-sunrise:after {
+	width: 32rem;
+	height: 32rem;
+	background: #57b8ff;
+	bottom: -14rem;
+	right: -10rem;
+}
+
+body.neo-sunrise #wrapper,
+body.neo-sunrise #header,
+body.neo-sunrise #main,
+body.neo-sunrise #contact,
+body.neo-sunrise #footer {
+	position: relative;
+	z-index: 1;
+}
+
+body.neo-sunrise h1,
+body.neo-sunrise h2,
+body.neo-sunrise h3,
+body.neo-sunrise .logo strong {
+	font-family: "Fraunces", Georgia, serif;
+	letter-spacing: 0.01em;
+}
+
+body.neo-sunrise a:hover {
+	color: #ffd37c !important;
+}
+
+body.neo-sunrise #header {
+	background: rgba(13, 18, 31, 0.55);
+	backdrop-filter: blur(10px);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+body.neo-sunrise #header.alt {
+	background: rgba(13, 18, 31, 0.35);
+	position: fixed;
+}
+
+body.neo-sunrise #header .logo strong {
+	background: linear-gradient(120deg, #ffbe63 0%, #ffa86c 55%, #67d6ce 100%);
+	color: #131827;
+	padding: 0.2em 0.6em;
+	border-radius: 999px;
+}
+
+body.neo-sunrise #banner {
+	background-image:
+		linear-gradient(122deg, rgba(16, 21, 35, 0.45) 0%, rgba(16, 21, 35, 0.75) 100%),
+		url("../../images/banner.jpg");
+	background-position: center;
+	background-size: cover;
+	min-height: 36em;
+	height: 88vh;
+	max-height: 60em;
+}
+
+body.neo-sunrise #banner:after {
+	background: linear-gradient(115deg, rgba(28, 36, 56, 0.45) 0%, rgba(23, 31, 50, 0.82) 100%);
+	opacity: 1;
+}
+
+body.neo-sunrise #banner > .inner {
+	max-width: 74rem;
+	padding: 0 2rem !important;
+	animation: sunrise-fade-up 0.9s ease-out both;
+}
+
+body.neo-sunrise #banner h1 {
+	font-size: clamp(2.3rem, 6vw, 4.9rem);
+	line-height: 1.05;
+	max-width: 13ch;
+	margin-bottom: 0.35em;
+	text-wrap: balance;
+}
+
+body.neo-sunrise #banner .content {
+	align-items: flex-start;
+	gap: 1.25rem;
+}
+
+body.neo-sunrise #banner .content p {
+	font-size: clamp(0.82rem, 1.1vw, 1rem);
+	letter-spacing: 0.11em;
+	line-height: 1.8;
+	max-width: 56ch;
+	color: rgba(255, 255, 255, 0.88);
+}
+
+body.neo-sunrise .button,
+body.neo-sunrise input[type="submit"],
+body.neo-sunrise input[type="reset"],
+body.neo-sunrise input[type="button"] {
+	background: linear-gradient(120deg, #ffc86b 0%, #ffab6f 55%, #57cfd8 100%);
+	border: 0;
+	border-radius: 999px;
+	box-shadow: 0 10px 24px rgba(255, 168, 108, 0.22);
+	color: #182033 !important;
+	font-weight: 700;
+	letter-spacing: 0.07em;
+	padding-left: 2.2em;
+	padding-right: 2.2em;
+	text-transform: uppercase;
+	transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+body.neo-sunrise .button:hover,
+body.neo-sunrise input[type="submit"]:hover,
+body.neo-sunrise input[type="reset"]:hover,
+body.neo-sunrise input[type="button"]:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 16px 28px rgba(93, 180, 210, 0.25);
+}
+
+body.neo-sunrise #one.tiles {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1.2rem;
+	padding: 1.6rem clamp(1.2rem, 2.5vw, 2.6rem) 2.2rem;
+	background: transparent;
+	max-width: 80rem;
+	margin: 0 auto;
+}
+
+body.neo-sunrise #one.tiles article {
+	border-radius: 1.4rem;
+	overflow: hidden;
+	box-shadow: 0 18px 34px rgba(7, 11, 19, 0.34);
+	transform: translateY(0);
+	transition: transform 0.35s ease, box-shadow 0.35s ease;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(4px);
+}
+
+body.neo-sunrise #one.tiles article:before {
+	background: linear-gradient(170deg, rgba(255, 172, 116, 0.62) 0%, rgba(99, 182, 220, 0.55) 100%);
+	opacity: 0.7;
+}
+
+body.neo-sunrise #one.tiles article:nth-child(3n + 2):before {
+	background: linear-gradient(170deg, rgba(241, 140, 109, 0.58) 0%, rgba(79, 169, 206, 0.56) 100%);
+}
+
+body.neo-sunrise #one.tiles article:nth-child(3n + 3):before {
+	background: linear-gradient(170deg, rgba(255, 203, 112, 0.6) 0%, rgba(101, 213, 181, 0.54) 100%);
+}
+
+body.neo-sunrise #one.tiles article:hover {
+	transform: translateY(-8px) scale(1.01);
+	box-shadow: 0 24px 36px rgba(6, 9, 16, 0.4);
+}
+
+body.neo-sunrise #one.tiles article .major h3 {
+	font-size: 1.75rem;
+	line-height: 1.2;
+}
+
+body.neo-sunrise #one.tiles article .major p {
+	font-size: 0.88rem;
+	font-weight: 500;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.92);
+}
+
+body.neo-sunrise #two {
+	background: transparent;
+	padding: 1.2rem 0 0;
+}
+
+body.neo-sunrise #two > .inner {
+	background: rgba(20, 27, 44, 0.64);
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	border-radius: 1.4rem;
+	backdrop-filter: blur(8px);
+	padding: clamp(2rem, 4vw, 3rem);
+	max-width: 76rem;
+	margin: 0 auto;
+	box-shadow: 0 16px 32px rgba(10, 14, 24, 0.28);
+}
+
+body.neo-sunrise #contact {
+	background: linear-gradient(180deg, rgba(17, 24, 40, 0.75) 0%, rgba(12, 16, 30, 0.9) 100%);
+	border-top: 1px solid rgba(255, 255, 255, 0.12);
+	margin-top: 3rem;
+}
+
+body.neo-sunrise #contact input[type="text"],
+body.neo-sunrise #contact textarea {
+	background: rgba(255, 255, 255, 0.06);
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	border-radius: 0.85rem;
+}
+
+body.neo-sunrise #contact label {
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	color: rgba(255, 255, 255, 0.86);
+}
+
+body.neo-sunrise #footer {
+	padding-top: 2.4rem;
+	background: transparent;
+}
+
+body.neo-sunrise #footer .copyright {
+	color: rgba(255, 255, 255, 0.62);
+}
+
+@keyframes sunrise-fade-up {
+	0% {
+		opacity: 0;
+		transform: translateY(18px);
+	}
+
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media screen and (max-width: 980px) {
+	body.neo-sunrise #one.tiles {
+		grid-template-columns: 1fr;
+	}
+
+	body.neo-sunrise #banner {
+		height: auto;
+		min-height: 30em;
+		padding-top: 8em;
+	}
+
+	body.neo-sunrise #banner .content {
+		flex-direction: column;
+		gap: 1rem;
+	}
+}
+
+@media screen and (max-width: 736px) {
+	body.neo-sunrise #header.alt {
+		position: fixed;
+	}
+
+	body.neo-sunrise #banner > .inner {
+		padding: 0 1.25rem !important;
+	}
+
+	body.neo-sunrise #one.tiles {
+		padding: 1.2rem 0.8rem 1.4rem;
+		gap: 0.9rem;
+	}
+
+	body.neo-sunrise #one.tiles article .major h3 {
+		font-size: 1.4rem;
+	}
+}
