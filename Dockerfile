@@ -1,5 +1,5 @@
-# 1. Utilisation de la version PRÉCISE demandée par l'exercice
-FROM nginx:alpine3.23
+# 1. Utilisation de la version plus légère demandée pour la production
+FROM nginx:alpine3.23-slim
 
 # 2. Copie de TOUT le dossier actuel vers le dossier de Nginx
 # C'est plus simple que de copier chaque fichier un par un

@@ -3,11 +3,11 @@ name: CI-CD Docker Pipeline
 on:
   push:
     branches:
-      - dev
+      - prod
 
 env:
   IMAGE_NAME: intranet-newdeal
-  IMAGE_TAG: dev
+  IMAGE_TAG: prod
 
 jobs:
   # JOB 1 : Construction de l'image
@@ -31,7 +31,7 @@ jobs:
           name: docker-image
           path: image.tar
 
-# JOB 2 : Scan de sécurité (dépend du build)
+  # JOB 2 : Scan de sécurité (bloque en cas de vulnérabilité CRITICAL)
   security_scan:
     needs: build
     runs-on: ubuntu-latest
@@ -47,13 +47,22 @@ jobs:
       - name: Load Docker image
         run: docker load < image.tar
 
-      - name: Scan for vulnerabilities (Trivy)
+      - name: Scan Docker image for CRITICAL vulnerabilities (Trivy)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'
           format: 'table'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
           exit-code: '1' # IMPORTANT : permet de voir les erreurs sans bloquer le pipeline
+
+      - name: Scan source code for CRITICAL vulnerabilities (Trivy FS)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL'
+          exit-code: '1'
 
       - name: Scan for secrets (TruffleHog)
         uses: trufflesecurity/trufflehog@main
@@ -83,3 +92,61 @@ jobs:
       - name: Push image
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+  # JOB 4 : Déploiement sur le runner de production
+  deploy_prod:
+    needs: push_to_hub
+    runs-on: [self-hosted, runner_prod]
+    steps:
+      - name: Login to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Pull production image
+        run: |
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - name: Stop existing container
+        run: |
+          docker rm -f intranet-newdeal-prod || true
+
+      - name: Start production container on port 80
+        run: |
+          docker run -d \
+            --name intranet-newdeal-prod \
+            --restart unless-stopped \
+            -p 80:80 \
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+  # JOB 5 : Notification email de fin de pipeline
+  notify_email:
+    needs: [build, security_scan, push_to_hub, deploy_prod]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compute pipeline status
+        id: status
+        run: |
+          OVERALL_STATUS="success"
+          if [ "${{ needs.build.result }}" != "success" ] || [ "${{ needs.security_scan.result }}" != "success" ] || [ "${{ needs.push_to_hub.result }}" != "success" ] || [ "${{ needs.deploy_prod.result }}" != "success" ]; then
+            OVERALL_STATUS="failure"
+          fi
+          echo "overall_status=$OVERALL_STATUS" >> "$GITHUB_OUTPUT"
+
+      - name: Send notification email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "[${{ steps.status.outputs.overall_status }}] CI/CD prod - ${{ env.IMAGE_NAME }}"
+          to: ${{ secrets.MAIL_TO }}
+          from: ${{ secrets.MAIL_FROM }}
+          content_type: text/plain
+          body: |
+            Pipeline prod: ${{ steps.status.outputs.overall_status }}
+            Build: ${{ needs.build.result }}
+            Security scan: ${{ needs.security_scan.result }}
+            Push Docker Hub: ${{ needs.push_to_hub.result }}
+            Deploy production: ${{ needs.deploy_prod.result }}
