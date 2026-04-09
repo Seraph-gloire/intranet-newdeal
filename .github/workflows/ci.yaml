@@ -3,40 +3,58 @@ name: CI-CD Docker Pipeline
 on:
   push:
     branches:
-      - dev  # Changé main -> dev pour que ça détecte ton travail
+      - dev
 
 env:
   IMAGE_NAME: intranet-newdeal
   IMAGE_TAG: dev
-  DOCKER_REGISTRY: ${{ secrets.DOCKERHUB_USERNAME }}
 
 jobs:
-  # JOB 1 : Construction et Push vers Docker Hub
   ci:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
 
       - name: Login to Docker Hub
         run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | \
-          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - name: Build Docker image
+      - name: Build Docker image (Job 1)
         run: |
-          docker build -t ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
+
+      # --- DÉBUT DU JOB 2 (SÉCURITÉ) ---
+      
+      - name: Scan image for vulnerabilities (Job 2 - Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          format: 'table'
+          exit-code: '1' 
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Scan for secrets in code (Job 2 - Secret Scan)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: "" 
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      # --- FIN DU JOB 2 ---
 
       - name: Push Docker image
         run: |
-          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
-  # JOB 2 : Simulation de déploiement (sur serveur GitHub)
   deploy:
     needs: ci
-    runs-on: ubuntu-latest # Changé runner-lab -> ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
-      - name: Pull image from Docker Hub
-        run: |
-          echo "Déploiement en cours de l'image ${{ env.IMAGE_NAME }}..."
-          # Ici on simule le déploiement sur un environnement de test
+      - name: Deploy status
+        run: echo "Le pipeline CI (Build + Scan) est terminé avec succès !"
