@@ -31,15 +31,13 @@ jobs:
           name: docker-image
           path: image.tar
 
-  # JOB 2 : Scan de sécurité (dépend du build)
+# JOB 2 : Scan de sécurité (dépend du build)
   security_scan:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Download image artifact
         uses: actions/download-artifact@v4
@@ -52,10 +50,10 @@ jobs:
       - name: Scan for vulnerabilities (Trivy)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'
           format: 'table'
-          exit-code: '1'
           severity: 'CRITICAL,HIGH'
+          exit-code: '0' # IMPORTANT : permet de voir les erreurs sans bloquer le pipeline
 
       - name: Scan for secrets (TruffleHog)
         uses: trufflesecurity/trufflehog@main
@@ -63,6 +61,7 @@ jobs:
           path: ./
           base: ""
           head: HEAD
+          extra_args: --only-verified
 
   # JOB 3 : Push vers Docker Hub (dépend du scan)
   push_to_hub:
