@@ -10,51 +10,77 @@ env:
   IMAGE_TAG: dev
 
 jobs:
-  ci:
+  # JOB 1 : Construction de l'image
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
+          
+      # On sauvegarde l'image temporairement pour le job suivant
+      - name: Save image as tar
+        run: docker save ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} > image.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: image.tar
+
+  # JOB 2 : Scan de sécurité (dépend du build)
+  security_scan:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+
+      - name: Load Docker image
+        run: docker load < image.tar
+
+      - name: Scan for vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Scan for secrets (TruffleHog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ""
+          head: HEAD
+
+  # JOB 3 : Push vers Docker Hub (dépend du scan)
+  push_to_hub:
+    needs: security_scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+
+      - name: Load Docker image
+        run: docker load < image.tar
 
       - name: Login to Docker Hub
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - name: Build Docker image (Job 1)
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
-
-      # --- DÉBUT DU JOB 2 (SÉCURITÉ) ---
-      
-      - name: Scan image for vulnerabilities (Job 2 - Trivy)
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          format: 'table'
-          exit-code: '1' 
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Scan for secrets in code (Job 2 - Secret Scan)
-        uses: trufflesecurity/trufflehog@main
-        with:
-          path: ./
-          base: "" 
-          head: HEAD
-          extra_args: --debug --only-verified
-
-      # --- FIN DU JOB 2 ---
-
-      - name: Push Docker image
+      - name: Push image
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-
-  deploy:
-    needs: ci
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy status
-        run: echo "Le pipeline CI (Build + Scan) est terminé avec succès !"
