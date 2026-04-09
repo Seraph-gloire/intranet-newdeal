@@ -1,18 +1,12 @@
-# Use official Nginx image as base (for serving static content)
-FROM nginx:alpine
+# 1. Utilisation de la version PRÉCISE demandée par l'exercice
+FROM nginx:alpine3.23
 
-# Copy our app files into the default Nginx document root (/usr/share/nginx/html)
-COPY index.html /usr/share/nginx/html/
-COPY elements.html /usr/share/nginx/html/
-COPY generic.html /usr/share/nginx/html/
-COPY landing.html /usr/share/nginx/html/
-COPY assets /usr/share/nginx/html/assets
-COPY images /usr/share/nginx/html/images
-COPY LICENSE.txt /usr/share/nginx/html/
-COPY README.txt /usr/share/nginx/html/
+# 2. Copie de TOUT le dossier actuel vers le dossier de Nginx
+# C'est plus simple que de copier chaque fichier un par un
+COPY . /usr/share/nginx/html/
 
-# Expose port 80 for HTTP access (Nginx listens on port 80 by default)
+# 3. Port exposé
 EXPOSE 80
 
-# Run command when container starts up
+# 4. Commande de lancement
 CMD ["nginx", "-g", "daemon off;"]
